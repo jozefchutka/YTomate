@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="build helper">
+	<target name="build-debug" description="Build a debug version for android.">
+		<exec executable="haxe" failonerror="true">
+			<arg line="-main Main -js bin/static/automation.js -lib yloader -lib msignal -cp src/client/haxe -debug"/>
+		</exec>
+
+		<exec executable="haxe" failonerror="true">
+			<arg line="-main Main -js bin/server.js -lib express -lib hxnodejs -cp src/server/haxe -debug"/>
+		</exec>
+
+		<processAssets/>
+	</target>
+
+	<target name="clean" description="Clean before build.">
+		<delete dir="bin"/>
+	</target>
+
+	<target name="run-server">
+		<npm args="install" dir="bin"/>
+		<command executable="node" args="server.js" dir="bin"/>
+	</target>
+
+	<target name="clean-build-debug-run">
+		<antcall target="clean"/>
+		<antcall target="build-debug"/>
+		<antcall target="run-server"/>
+	</target>
+
+	<macrodef name="processAssets">
+		<attribute name="releaseEnv" default="production"/>
+		<sequential>
+			<copy todir="bin">
+				<fileset dir="res/common"/>
+			</copy>
+			<copy todir="bin" overwrite="true" failonerror="false">
+				<fileset dir="res/@{releaseEnv}"/>
+			</copy>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="npm">
+		<attribute name="args"/>
+		<attribute name="dir" default=""/>
+		<sequential>
+			<command executable="npm" args="@{args}" dir="@{dir}"/>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="command">
+		<attribute name="executable"/>
+		<attribute name="args"/>
+		<attribute name="dir" default=""/>
+		<sequential>
+			<exec executable="cmd.exe" osfamily="windows" dir="@{dir}" failonerror="true">
+				<arg line="/c @{executable} @{args}"/>
+			</exec>
+			<exec executable="@{executable}" osfamily="unix" dir="@{dir}" failonerror="true">
+				<arg line="@{args}"/>
+			</exec>
+		</sequential>
+	</macrodef>
+</project>
